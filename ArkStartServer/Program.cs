@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.Extensions.Configuration;
+using System.Diagnostics;
 using System.Timers;
 
 namespace ArkStartServer
@@ -6,11 +7,19 @@ namespace ArkStartServer
     internal class Program
     {
         private static System.Timers.Timer checkSteamTimer;
-
+        private static string ArkServerLocation;
         static void Main(string[] args)
         {
             string asciiArt = Figgle.FiggleFonts.Standard.Render("ARK Server Loader");
             Console.WriteLine(asciiArt);
+
+            var configuration = new ConfigurationBuilder()
+          .SetBasePath(Directory.GetCurrentDirectory())
+          .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+          .Build();
+
+            // Read settings
+            ArkServerLocation = configuration["ArkServerLocation"];
 
             // Set up the timer for 10000 milliseconds (10 seconds)
             checkSteamTimer = new System.Timers.Timer(10000);
@@ -21,7 +30,7 @@ namespace ArkStartServer
             // Enable the timer
             checkSteamTimer.Enabled = true;
 
-            Console.WriteLine("Monitoring for Steam. The application will exit if Steam is detected.");
+            Console.WriteLine("Monitoring for Steam. The application will exit when Steam is detected and ArkServer has been loaded.");
 
             // Keep the application running
             Console.ReadLine();
@@ -36,8 +45,10 @@ namespace ArkStartServer
 
                 // Start the executable
                 Console.WriteLine("[" + DateTime.Now + "] Starting Server...");
-                //string executablePath = @"C:\path\to\your\executable.exe";
-                //Process.Start(executablePath);
+
+                ProcessStartInfo startInfo = new ProcessStartInfo(ArkServerLocation);
+                startInfo.UseShellExecute = true;//This should not block your program
+                Process.Start(startInfo);
 
                 Environment.Exit(0); // Exit the application
             }
